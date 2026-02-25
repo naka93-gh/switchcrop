@@ -1,0 +1,28 @@
+[package]
+name = "cropper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "cropper_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "cropper"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+image = "0.25"
+base64 = "0.22"
+window-vibrancy = "0.6"
+
+[dev-dependencies]
+tempfile = "3"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
