@@ -1,16 +1,7 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { derived, get, writable } from "svelte/store";
-import {
-  cropImages,
-  getImageInfo,
-  getPreviewData,
-} from "../commands/crop-commands.js";
-import type {
-  CropResult,
-  CropSettings,
-  FileEntry,
-  ProcessingStatus,
-} from "../types/index.js";
+import { cropImages, getImageInfo, getPreviewData } from "../commands/crop-commands.js";
+import type { CropResult, CropSettings, FileEntry, ProcessingStatus } from "../types/index.js";
 
 /** ファイルリスト */
 export const files = writable<FileEntry[]>([]);

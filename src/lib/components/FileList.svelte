@@ -11,10 +11,13 @@
 
   let viewMode = $state<"list" | "card">("list");
 
+  /** ファイル選択ダイアログを開いて画像を追加する。 */
   async function handleAddFiles(): Promise<void> {
     const selected = await open({
       multiple: true,
-      filters: [{ name: "画像", extensions: ["jpg", "jpeg", "png", "webp", "bmp", "gif", "tiff", "tif"] }],
+      filters: [
+        { name: "画像", extensions: ["jpg", "jpeg", "png", "webp", "bmp", "gif", "tiff", "tif"] },
+      ],
     });
     if (selected) {
       const paths = Array.isArray(selected) ? selected : [selected];
@@ -56,7 +59,7 @@
 
   {#if viewMode === "list"}
     <ul class="list">
-      {#each $files as file, i}
+      {#each $files as file, i (file.path)}
         <li class:selected={i === $selectedIndex}>
           <button class="file-item" onclick={() => selectFile(i)}>
             {#if file.thumbnailUrl}
@@ -75,14 +78,16 @@
     </ul>
   {:else}
     <div class="card-grid">
-      {#each $files as file, i}
+      {#each $files as file, i (file.path)}
         <div
           class="card-item"
           class:selected={i === $selectedIndex}
           role="button"
           tabindex="0"
           onclick={() => selectFile(i)}
-          onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') selectFile(i); }}
+          onkeydown={(e: KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") selectFile(i);
+          }}
           title={file.name}
         >
           {#if file.thumbnailUrl}
@@ -90,7 +95,14 @@
           {:else}
             <span class="thumbnail-placeholder-card"></span>
           {/if}
-          <button class="remove-btn-card" onclick={(e: MouseEvent) => { e.stopPropagation(); removeFile(i); }} title="削除">×</button>
+          <button
+            class="remove-btn-card"
+            onclick={(e: MouseEvent) => {
+              e.stopPropagation();
+              removeFile(i);
+            }}
+            title="削除">×</button
+          >
         </div>
       {/each}
     </div>
@@ -155,7 +167,9 @@
     background: var(--color-surface);
     color: var(--color-text-tertiary);
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
   }
 
   .view-toggle button:first-child {

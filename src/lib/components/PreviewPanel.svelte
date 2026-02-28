@@ -7,6 +7,7 @@
     status,
   } from "../stores/crop-store.js";
 
+  /** クロップ設定から CSS clip-path の inset 値を算出する。 */
   const clipPath = $derived.by(() => {
     const info = $selectedFile?.info;
     if (!info || !$originalImageUrl) return "none";

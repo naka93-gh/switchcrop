@@ -11,10 +11,7 @@
   import type { CropPreset } from "../types/index.js";
 
   /** クロップ値の入力ハンドラー。 */
-  function handleInput(
-    side: "top" | "bottom" | "left" | "right",
-    event: Event,
-  ): void {
+  function handleInput(side: "top" | "bottom" | "left" | "right", event: Event): void {
     const target = event.target as HTMLInputElement;
     const value = Math.max(0, parseInt(target.value) || 0);
     cropSettings.update((s) => ({ ...s, [side]: value }));
@@ -36,12 +33,7 @@
 
 <div class="crop-panel">
   <div class="settings">
-    {#each [
-      { key: "top" as const, label: "上" },
-      { key: "bottom" as const, label: "下" },
-      { key: "left" as const, label: "左" },
-      { key: "right" as const, label: "右" },
-    ] as { key, label }}
+    {#each [{ key: "top" as const, label: "上" }, { key: "bottom" as const, label: "下" }, { key: "left" as const, label: "左" }, { key: "right" as const, label: "右" }] as { key, label } (key)}
       <label class="setting-item">
         <span class="label">{label}</span>
         <input
@@ -57,7 +49,7 @@
 
   {#if matchingPresets.length > 0}
     <div class="presets">
-      {#each matchingPresets as preset}
+      {#each matchingPresets as preset (preset.label)}
         <button class="preset-btn" onclick={() => applyPreset(preset)}>
           {preset.label}
         </button>

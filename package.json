@@ -8,7 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "vitest run"
+    "test": "vitest run",
+    "format": "prettier --write 'src/**/*.{ts,svelte}' && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "format:check": "prettier --check 'src/**/*.{ts,svelte}' && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
+    "lint": "eslint 'src/**/*.{ts,svelte}' && cargo clippy --manifest-path src-tauri/Cargo.toml",
+    "lint:fix": "eslint --fix 'src/**/*.{ts,svelte}'"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
@@ -16,13 +20,21 @@
     "@tauri-apps/plugin-fs": "^2.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.3",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tauri-apps/cli": "^2.0.0",
     "@testing-library/svelte": "^5.0.0",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.15.0",
+    "globals": "^17.3.0",
     "jsdom": "^25.0.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-svelte": "^3.5.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.6.0",
+    "typescript-eslint": "^8.56.1",
     "vite": "^6.0.0",
     "vitest": "^3.0.0"
   }

@@ -5,11 +5,7 @@
 {#if $status === "processing" || $status === "done"}
   <div class="progress-bar">
     <div class="track">
-      <div
-        class="fill"
-        class:done={$status === "done"}
-        style="width: {$progress * 100}%"
-      ></div>
+      <div class="fill" class:done={$status === "done"} style="width: {$progress * 100}%"></div>
     </div>
     <span class="label">{Math.round($progress * 100)}%</span>
   </div>

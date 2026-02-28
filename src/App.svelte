@@ -6,12 +6,14 @@
   import ProgressBar from "./lib/components/ProgressBar.svelte";
   import { addFiles, selectedIndex, updateOriginalImageUrl } from "./lib/stores/crop-store.js";
 
+  /** 読み込み対応する画像拡張子。 */
   const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "bmp", "gif", "tiff", "tif"]);
 
   type Tab = "files" | "crop";
   let activeTab: Tab = $state("files");
   let isDragging = $state(false);
 
+  /** パス配列から画像ファイルのみ抽出する。 */
   function filterImagePaths(paths: string[]): string[] {
     return paths.filter((p) => {
       const ext = p.split(".").pop()?.toLowerCase() ?? "";
@@ -19,11 +21,13 @@
     });
   }
 
+  /** 選択ファイル変更時にプレビュー用 Object URL を更新する。 */
   $effect(() => {
     void $selectedIndex;
     updateOriginalImageUrl();
   });
 
+  /** ドラッグ&ドロップで画像ファイルを受け付ける。 */
   $effect(() => {
     const unlisten = getCurrentWebview().onDragDropEvent((event) => {
       if (event.payload.type === "enter") {
@@ -39,7 +43,9 @@
         isDragging = false;
       }
     });
-    return () => { unlisten.then((fn) => fn()); };
+    return () => {
+      unlisten.then((fn) => fn());
+    };
   });
 </script>
 
@@ -54,11 +60,7 @@
       >
         ファイル
       </button>
-      <button
-        class="tab"
-        class:active={activeTab === "crop"}
-        onclick={() => (activeTab = "crop")}
-      >
+      <button class="tab" class:active={activeTab === "crop"} onclick={() => (activeTab = "crop")}>
         クロップ
       </button>
     </nav>
@@ -127,7 +129,9 @@
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
   }
 
   .tab:hover {
