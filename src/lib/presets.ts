@@ -7,6 +7,7 @@ import type { CropPreset } from "./types/index.js";
 export const CROP_PRESETS: CropPreset[] = [
   // ゲームキューブ
   {
+    id: "gc",
     label: "GC",
     sourceWidth: 1920,
     sourceHeight: 1080,
@@ -14,6 +15,7 @@ export const CROP_PRESETS: CropPreset[] = [
   },
   // ゲームボーイアドバンス
   {
+    id: "gba",
     label: "GBA",
     sourceWidth: 1280,
     sourceHeight: 720,

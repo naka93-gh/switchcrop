@@ -1,12 +1,19 @@
 <script lang="ts">
   import { open } from "@tauri-apps/plugin-dialog";
+  import { CROP_PRESETS } from "../presets.js";
   import {
     addFiles,
+    assignGroup,
+    checkAll,
+    checkedPaths,
     clearFiles,
     files,
+    groupedFiles,
     removeFile,
     selectedIndex,
     selectFile,
+    toggleCheck,
+    uncheckAll,
   } from "../stores/crop-store.js";
 
   let viewMode = $state<"list" | "card">("list");
@@ -23,6 +30,11 @@
       const paths = Array.isArray(selected) ? selected : [selected];
       await addFiles(paths);
     }
+  }
+
+  /** パスからフラット配列上のインデックスを取得する。 */
+  function flatIndex(path: string): number {
+    return $files.findIndex((f) => f.path === path);
   }
 </script>
 
@@ -57,56 +69,102 @@
     </div>
   </div>
 
-  {#if viewMode === "list"}
-    <ul class="list">
-      {#each $files as file, i (file.path)}
-        <li class:selected={i === $selectedIndex}>
-          <button class="file-item" onclick={() => selectFile(i)}>
-            {#if file.thumbnailUrl}
-              <img class="thumbnail-list" src={file.thumbnailUrl} alt="" />
-            {:else}
-              <span class="thumbnail-placeholder-list"></span>
-            {/if}
-            <span class="file-name">{file.name}</span>
-            {#if file.info}
-              <span class="file-size">{file.info.width}×{file.info.height}</span>
-            {/if}
-          </button>
-          <button class="remove-btn" onclick={() => removeFile(i)} title="削除">×</button>
-        </li>
+  {#if $checkedPaths.size > 0}
+    <div class="group-toolbar">
+      <span class="toolbar-label">{$checkedPaths.size}件選択:</span>
+      {#each CROP_PRESETS as preset (preset.id)}
+        <button class="toolbar-btn" onclick={() => assignGroup(preset.id)}>
+          {preset.label}
+        </button>
       {/each}
-    </ul>
-  {:else}
-    <div class="card-grid">
-      {#each $files as file, i (file.path)}
-        <div
-          class="card-item"
-          class:selected={i === $selectedIndex}
-          role="button"
-          tabindex="0"
-          onclick={() => selectFile(i)}
-          onkeydown={(e: KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") selectFile(i);
-          }}
-          title={file.name}
-        >
-          {#if file.thumbnailUrl}
-            <img class="thumbnail-card" src={file.thumbnailUrl} alt={file.name} />
-          {:else}
-            <span class="thumbnail-placeholder-card"></span>
-          {/if}
-          <button
-            class="remove-btn-card"
-            onclick={(e: MouseEvent) => {
-              e.stopPropagation();
-              removeFile(i);
-            }}
-            title="削除">×</button
-          >
-        </div>
-      {/each}
+      <button class="toolbar-btn toolbar-btn--muted" onclick={() => assignGroup(null)}>
+        未分類に戻す
+      </button>
+      <div class="toolbar-spacer"></div>
+      <button class="toolbar-btn toolbar-btn--muted" onclick={uncheckAll}>解除</button>
+    </div>
+  {:else if $files.length > 0}
+    <div class="group-toolbar">
+      <button class="toolbar-btn toolbar-btn--muted" onclick={checkAll}>全選択</button>
     </div>
   {/if}
+
+  <div class="file-content">
+    {#each $groupedFiles as group (group.id ?? "__ungrouped")}
+      <div class="group-section">
+        <div class="group-header">
+          {group.label} ({group.files.length})
+        </div>
+
+        {#if viewMode === "list"}
+          <ul class="list">
+            {#each group.files as file (file.path)}
+              {@const idx = flatIndex(file.path)}
+              <li class:selected={idx === $selectedIndex}>
+                <input
+                  type="checkbox"
+                  class="check"
+                  checked={$checkedPaths.has(file.path)}
+                  onclick={(e: MouseEvent) => e.stopPropagation()}
+                  onchange={() => toggleCheck(file.path)}
+                />
+                <button class="file-item" onclick={() => selectFile(idx)}>
+                  {#if file.thumbnailUrl}
+                    <img class="thumbnail-list" src={file.thumbnailUrl} alt="" />
+                  {:else}
+                    <span class="thumbnail-placeholder-list"></span>
+                  {/if}
+                  <span class="file-name">{file.name}</span>
+                  {#if file.info}
+                    <span class="file-size">{file.info.width}×{file.info.height}</span>
+                  {/if}
+                </button>
+                <button class="remove-btn" onclick={() => removeFile(idx)} title="削除">×</button>
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <div class="card-grid">
+            {#each group.files as file (file.path)}
+              {@const idx = flatIndex(file.path)}
+              <div
+                class="card-item"
+                class:selected={idx === $selectedIndex}
+                role="button"
+                tabindex="0"
+                onclick={() => selectFile(idx)}
+                onkeydown={(e: KeyboardEvent) => {
+                  if (e.key === "Enter" || e.key === " ") selectFile(idx);
+                }}
+                title={file.name}
+              >
+                <input
+                  type="checkbox"
+                  class="check check-card"
+                  checked={$checkedPaths.has(file.path)}
+                  onclick={(e: MouseEvent) => e.stopPropagation()}
+                  onchange={() => toggleCheck(file.path)}
+                />
+                {#if file.thumbnailUrl}
+                  <img class="thumbnail-card" src={file.thumbnailUrl} alt={file.name} />
+                {:else}
+                  <span class="thumbnail-placeholder-card"></span>
+                {/if}
+                <button
+                  class="remove-btn-card"
+                  onclick={(e: MouseEvent) => {
+                    e.stopPropagation();
+                    removeFile(idx);
+                  }}
+                  title="削除">×</button
+                >
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/each}
+  </div>
 
   {#if $files.length === 0}
     <p class="empty">ファイルを追加してください</p>
@@ -185,15 +243,98 @@
     color: var(--color-accent);
   }
 
+  /* --- グループツールバー --- */
+
+  .group-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-label {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .toolbar-btn {
+    padding: 2px 10px;
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-accent);
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .toolbar-btn:hover {
+    opacity: 0.75;
+  }
+
+  .toolbar-btn--muted {
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  .toolbar-spacer {
+    flex: 1;
+  }
+
+  /* --- ファイルコンテンツ（スクロール領域） --- */
+
+  .file-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* --- グループセクション --- */
+
+  .group-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .group-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    padding: 2px 4px;
+  }
+
+  /* --- チェックボックス --- */
+
+  .check {
+    flex-shrink: 0;
+    margin: 0 0 0 8px;
+    cursor: pointer;
+  }
+
+  .check-card {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    margin: 0;
+    z-index: 1;
+  }
+
   /* --- リスト表示 --- */
 
   .list {
     list-style: none;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
     background: var(--color-surface);
   }
 
@@ -285,9 +426,6 @@
     padding: 6px;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
     background: var(--color-surface);
     align-content: start;
   }

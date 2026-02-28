@@ -19,6 +19,7 @@ export interface FileEntry {
   name: string;
   info: ImageInfo | null;
   thumbnailUrl: string;
+  groupId: string | null;
 }
 
 /** クロップ結果 */
@@ -34,6 +35,7 @@ export type ProcessingStatus = "idle" | "processing" | "done" | "error";
 
 /** クロップのプリセット */
 export interface CropPreset {
+  id: string;
   label: string;
   sourceWidth: number;
   sourceHeight: number;

@@ -1,6 +1,7 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { derived, get, writable } from "svelte/store";
 import { cropImages, getImageInfo, getPreviewData } from "../commands/crop-commands.js";
+import { CROP_PRESETS } from "../presets.js";
 import type { CropResult, CropSettings, FileEntry, ProcessingStatus } from "../types/index.js";
 
 /** ファイルリスト */
@@ -63,6 +64,7 @@ async function loadFileEntry(path: string): Promise<FileEntry> {
     name,
     info: infoResult.status === "fulfilled" ? infoResult.value : null,
     thumbnailUrl: thumbResult.status === "fulfilled" ? thumbResult.value : "",
+    groupId: null,
   };
 }
 
@@ -96,7 +98,58 @@ export function clearFiles(): void {
   files.set([]);
   selectedIndex.set(-1);
   originalImageUrl.set("");
+  checkedPaths.set(new Set());
 }
+
+/* ========== チェック・グループ管理 ========== */
+
+/** チェック済みファイルのパス集合 */
+export const checkedPaths = writable<Set<string>>(new Set());
+
+/** チェックのトグル */
+export function toggleCheck(path: string): void {
+  checkedPaths.update((s) => {
+    const next = new Set(s);
+    if (next.has(path)) next.delete(path);
+    else next.add(path);
+    return next;
+  });
+}
+
+/** 全選択 */
+export function checkAll(): void {
+  const paths = get(files).map((f) => f.path);
+  checkedPaths.set(new Set(paths));
+}
+
+/** 全解除 */
+export function uncheckAll(): void {
+  checkedPaths.set(new Set());
+}
+
+/** チェック済みファイルにグループを一括割り当て */
+export function assignGroup(groupId: string | null): void {
+  const checked = get(checkedPaths);
+  if (checked.size === 0) return;
+  files.update((current) => current.map((f) => (checked.has(f.path) ? { ...f, groupId } : f)));
+  checkedPaths.set(new Set());
+}
+
+/** グループ化されたファイル一覧 */
+export const groupedFiles = derived(files, ($files) => {
+  const groups: { id: string | null; label: string; files: FileEntry[] }[] = [];
+  for (const preset of CROP_PRESETS) {
+    const matched = $files.filter((f) => f.groupId === preset.id);
+    if (matched.length > 0) {
+      groups.push({ id: preset.id, label: preset.label, files: matched });
+    }
+  }
+  const ungrouped = $files.filter((f) => f.groupId === null);
+  if (ungrouped.length > 0) {
+    groups.push({ id: null, label: "未分類", files: ungrouped });
+  }
+  return groups;
+});
 
 /** ファイルを選択する */
 export function selectFile(index: number): void {
