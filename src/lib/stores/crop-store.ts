@@ -1,10 +1,15 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { derived, get, writable } from "svelte/store";
-import { cropImages, getImageInfo } from "../commands/crop-commands.js";
+import {
+  cropImages,
+  getImageInfo,
+  getPreviewData,
+} from "../commands/crop-commands.js";
 import type {
   CropResult,
   CropSettings,
   FileEntry,
+  ImageInfo,
   ProcessingStatus,
 } from "../types/index.js";
 
@@ -53,17 +58,27 @@ export const croppedSize = derived(
   },
 );
 
-/** ファイルを追加し、画像情報を取得する */
+const THUMBNAIL_CROP: CropSettings = { top: 0, bottom: 0, left: 0, right: 0 };
+const THUMBNAIL_SIZE = 80;
+
+/** ファイルを追加し、画像情報とサムネイルを取得する */
 export async function addFiles(paths: string[]): Promise<void> {
   const newEntries: FileEntry[] = [];
   for (const path of paths) {
     const name = path.split("/").pop() ?? path.split("\\").pop() ?? path;
+    let info: ImageInfo | null = null;
+    let thumbnailUrl = "";
     try {
-      const info = await getImageInfo(path);
-      newEntries.push({ path, name, info });
+      info = await getImageInfo(path);
     } catch {
-      newEntries.push({ path, name, info: null });
+      // info は null のまま
     }
+    try {
+      thumbnailUrl = await getPreviewData(path, THUMBNAIL_CROP, THUMBNAIL_SIZE);
+    } catch {
+      // サムネイル取得失敗時は空文字列
+    }
+    newEntries.push({ path, name, info, thumbnailUrl });
   }
   files.update((current) => [...current, ...newEntries]);
   if (get(selectedIndex) < 0 && newEntries.length > 0) {

@@ -18,6 +18,7 @@ export interface FileEntry {
   path: string;
   name: string;
   info: ImageInfo | null;
+  thumbnailUrl: string;
 }
 
 /** クロップ結果 */

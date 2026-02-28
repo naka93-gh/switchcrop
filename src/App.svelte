@@ -5,6 +5,9 @@
   import ProgressBar from "./lib/components/ProgressBar.svelte";
   import { selectedIndex, updateOriginalImageUrl } from "./lib/stores/crop-store.js";
 
+  type Tab = "files" | "crop";
+  let activeTab: Tab = $state("files");
+
   $effect(() => {
     void $selectedIndex;
     updateOriginalImageUrl();
@@ -14,18 +17,39 @@
 <div class="app">
   <header>
     <h1>Cropper</h1>
+    <nav class="tabs">
+      <button
+        class="tab"
+        class:active={activeTab === "files"}
+        onclick={() => (activeTab = "files")}
+      >
+        ファイル
+      </button>
+      <button
+        class="tab"
+        class:active={activeTab === "crop"}
+        onclick={() => (activeTab = "crop")}
+      >
+        クロップ
+      </button>
+    </nav>
   </header>
 
-  <div class="content">
-    <aside class="sidebar">
+  {#if activeTab === "files"}
+    <div class="tab-content files-tab">
       <FileList />
-      <CropPanel />
-      <ProgressBar />
-    </aside>
-    <main class="main">
-      <PreviewPanel />
-    </main>
-  </div>
+    </div>
+  {:else}
+    <div class="tab-content crop-tab">
+      <div class="preview-area">
+        <PreviewPanel />
+      </div>
+      <div class="controls">
+        <CropPanel />
+        <ProgressBar />
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -33,15 +57,16 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: transparent;
+    background: var(--color-bg);
   }
 
   header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     padding: 8px 16px;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     -webkit-app-region: drag;
   }
 
@@ -52,29 +77,58 @@
     letter-spacing: 0.02em;
   }
 
-  .content {
+  .tabs {
     display: flex;
-    flex: 1;
-    overflow: hidden;
+    gap: 4px;
+    -webkit-app-region: no-drag;
   }
 
-  .sidebar {
-    width: 300px;
-    min-width: 300px;
-    padding: 12px;
+  .tab {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .tab:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+  }
+
+  .tab.active {
+    background: var(--color-accent);
+    color: #ffffff;
+  }
+
+  .tab-content {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    overflow-y: auto;
-    border-right: 1px solid var(--color-border);
-    background: rgba(20, 20, 20, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
   }
 
-  .main {
-    flex: 1;
+  .files-tab {
     padding: 12px;
-    background: transparent;
+  }
+
+  .crop-tab {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .preview-area {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 </style>

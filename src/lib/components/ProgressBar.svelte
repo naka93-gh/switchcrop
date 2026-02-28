@@ -25,7 +25,7 @@
   .track {
     flex: 1;
     height: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--color-border-subtle);
     border-radius: 3px;
     overflow: hidden;
   }
@@ -35,12 +35,10 @@
     background: var(--color-accent);
     border-radius: 3px;
     transition: width 0.3s ease;
-    box-shadow: 0 0 8px rgba(91, 164, 245, 0.4);
   }
 
   .fill.done {
     background: var(--color-success);
-    box-shadow: 0 0 8px rgba(94, 194, 105, 0.4);
   }
 
   .label {

@@ -19,8 +19,6 @@
 </script>
 
 <div class="crop-panel">
-  <h3>クロップ設定</h3>
-
   <div class="settings">
     {#each [
       { key: "top" as const, label: "上" },
@@ -28,8 +26,8 @@
       { key: "left" as const, label: "左" },
       { key: "right" as const, label: "右" },
     ] as { key, label }}
-      <label class="setting-row">
-        <span class="label">{label}:</span>
+      <label class="setting-item">
+        <span class="label">{label}</span>
         <input
           type="number"
           min="0"
@@ -67,43 +65,32 @@
     gap: 12px;
   }
 
-  h3 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid var(--color-border-subtle);
-    padding-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
   .settings {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .setting-row {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 
+  .setting-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   .label {
-    width: 24px;
-    text-align: right;
     font-size: 13px;
     color: var(--color-text-secondary);
   }
 
   input[type="number"] {
-    width: 80px;
+    width: 100%;
+    min-width: 0;
     padding: 4px 8px;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     font-size: 13px;
     text-align: right;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--color-surface);
     color: var(--color-text-primary);
     transition: border-color 0.15s;
   }
@@ -125,7 +112,8 @@
     font-size: 12px;
     color: var(--color-text-secondary);
     padding: 6px 8px;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
     border-radius: 6px;
   }
 
@@ -139,13 +127,13 @@
   }
 
   .cropped.invalid {
-    color: var(--color-danger, #e55);
+    color: var(--color-error);
   }
 
   .execute-btn {
     padding: 10px 16px;
     background: var(--color-accent);
-    color: #fff;
+    color: #ffffff;
     border: none;
     border-radius: 6px;
     cursor: pointer;

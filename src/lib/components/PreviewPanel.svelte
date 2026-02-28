@@ -49,7 +49,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    background: rgba(0, 0, 0, 0.15);
+    background: #e5e5ea;
     border: 1px solid var(--color-border);
     border-radius: 8px;
     overflow: hidden;
@@ -75,18 +75,16 @@
     padding: 8px 12px;
     font-size: 13px;
     text-align: center;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
   }
 
   .result-banner.success {
-    background: rgba(94, 194, 105, 0.15);
-    color: var(--color-success);
+    background: rgba(52, 199, 89, 0.15);
+    color: #248a3d;
   }
 
   .result-banner.error {
-    background: rgba(240, 108, 108, 0.15);
-    color: var(--color-error);
+    background: rgba(255, 59, 48, 0.15);
+    color: #d70015;
     white-space: pre-line;
   }
 </style>
