@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { CROP_PRESETS } from "../presets.js";
   import {
     cropSettings,
     croppedSize,
@@ -7,7 +8,9 @@
     selectedFile,
     status,
   } from "../stores/crop-store.js";
+  import type { CropPreset } from "../types/index.js";
 
+  /** クロップ値の入力ハンドラー。 */
   function handleInput(
     side: "top" | "bottom" | "left" | "right",
     event: Event,
@@ -16,6 +19,19 @@
     const value = Math.max(0, parseInt(target.value) || 0);
     cropSettings.update((s) => ({ ...s, [side]: value }));
   }
+
+  /** プリセットの適用。 */
+  function applyPreset(preset: CropPreset): void {
+    cropSettings.set({ ...preset.settings });
+  }
+
+  /** 選択中画像のサイズに一致するプリセット一覧。 */
+  const matchingPresets = $derived(
+    CROP_PRESETS.filter((p) => {
+      const info = $selectedFile?.info;
+      return info && p.sourceWidth === info.width && p.sourceHeight === info.height;
+    }),
+  );
 </script>
 
 <div class="crop-panel">
@@ -38,6 +54,16 @@
       </label>
     {/each}
   </div>
+
+  {#if matchingPresets.length > 0}
+    <div class="presets">
+      {#each matchingPresets as preset}
+        <button class="preset-btn" onclick={() => applyPreset(preset)}>
+          {preset.label}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   {#if $selectedFile?.info && $croppedSize}
     <div class="size-info">
@@ -103,6 +129,28 @@
   .unit {
     font-size: 12px;
     color: var(--color-text-tertiary);
+  }
+
+  .presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .preset-btn {
+    padding: 4px 12px;
+    background: transparent;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+
+  .preset-btn:hover {
+    opacity: 0.85;
   }
 
   .size-info {

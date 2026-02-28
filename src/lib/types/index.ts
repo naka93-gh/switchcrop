@@ -31,3 +31,11 @@ export interface CropResult {
 
 /** 処理の進捗状態 */
 export type ProcessingStatus = "idle" | "processing" | "done" | "error";
+
+/** クロップのプリセット */
+export interface CropPreset {
+  label: string;
+  sourceWidth: number;
+  sourceHeight: number;
+  settings: CropSettings;
+}
