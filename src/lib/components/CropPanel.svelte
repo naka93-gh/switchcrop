@@ -1,10 +1,11 @@
 <script lang="ts">
   import {
     cropSettings,
-    status,
-    files,
+    croppedSize,
     executeCrop,
-    requestPreview,
+    files,
+    selectedFile,
+    status,
   } from "../stores/crop-store.js";
 
   function handleInput(
@@ -14,7 +15,6 @@
     const target = event.target as HTMLInputElement;
     const value = Math.max(0, parseInt(target.value) || 0);
     cropSettings.update((s) => ({ ...s, [side]: value }));
-    requestPreview();
   }
 </script>
 
@@ -40,6 +40,16 @@
       </label>
     {/each}
   </div>
+
+  {#if $selectedFile?.info && $croppedSize}
+    <div class="size-info">
+      <span class="original">{$selectedFile.info.width} x {$selectedFile.info.height}</span>
+      <span class="arrow">&rarr;</span>
+      <span class="cropped" class:invalid={$croppedSize.width <= 0 || $croppedSize.height <= 0}>
+        {$croppedSize.width} x {$croppedSize.height}
+      </span>
+    </div>
+  {/if}
 
   <button
     class="execute-btn"
@@ -106,6 +116,30 @@
   .unit {
     font-size: 12px;
     color: var(--color-text-tertiary);
+  }
+
+  .size-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+  }
+
+  .arrow {
+    color: var(--color-text-tertiary);
+  }
+
+  .cropped {
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  .cropped.invalid {
+    color: var(--color-danger, #e55);
   }
 
   .execute-btn {

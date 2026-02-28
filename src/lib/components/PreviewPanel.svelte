@@ -1,15 +1,32 @@
 <script lang="ts">
   import {
-    previewData,
+    cropSettings,
+    errorMessage,
+    originalImageUrl,
     selectedFile,
     status,
-    errorMessage,
   } from "../stores/crop-store.js";
+
+  const clipPath = $derived.by(() => {
+    const info = $selectedFile?.info;
+    if (!info || !$originalImageUrl) return "none";
+    const { top, right, bottom, left } = $cropSettings;
+    const tPct = (top / info.height) * 100;
+    const rPct = (right / info.width) * 100;
+    const bPct = (bottom / info.height) * 100;
+    const lPct = (left / info.width) * 100;
+    return `inset(${tPct}% ${rPct}% ${bPct}% ${lPct}%)`;
+  });
 </script>
 
 <div class="preview-panel">
-  {#if $previewData}
-    <img src={$previewData} alt="プレビュー" class="preview-image" />
+  {#if $originalImageUrl}
+    <img
+      src={$originalImageUrl}
+      alt="プレビュー"
+      class="preview-image"
+      style:clip-path={clipPath}
+    />
   {:else if $selectedFile}
     <p class="placeholder">プレビューを読み込み中...</p>
   {:else}

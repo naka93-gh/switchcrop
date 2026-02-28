@@ -1,13 +1,13 @@
 <script lang="ts">
-  import FileList from "./lib/components/FileList.svelte";
   import CropPanel from "./lib/components/CropPanel.svelte";
+  import FileList from "./lib/components/FileList.svelte";
   import PreviewPanel from "./lib/components/PreviewPanel.svelte";
   import ProgressBar from "./lib/components/ProgressBar.svelte";
-  import { selectedIndex, requestPreview } from "./lib/stores/crop-store.js";
+  import { selectedIndex, updateOriginalImageUrl } from "./lib/stores/crop-store.js";
 
   $effect(() => {
     void $selectedIndex;
-    requestPreview();
+    updateOriginalImageUrl();
   });
 </script>
 

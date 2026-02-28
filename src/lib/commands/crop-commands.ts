@@ -18,16 +18,3 @@ export async function cropImages(
 export async function getImageInfo(path: string): Promise<ImageInfo> {
   return invoke<ImageInfo>("get_image_info", { path });
 }
-
-/** プレビュー用Base64画像データを取得する */
-export async function getPreviewData(
-  path: string,
-  settings: CropSettings,
-  maxSize?: number,
-): Promise<string> {
-  return invoke<string>("get_preview_data", {
-    path,
-    settings,
-    maxSize: maxSize ?? null,
-  });
-}

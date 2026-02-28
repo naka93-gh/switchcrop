@@ -1,15 +1,12 @@
-import { writable, derived, get } from "svelte/store";
+import { readFile } from "@tauri-apps/plugin-fs";
+import { derived, get, writable } from "svelte/store";
+import { cropImages, getImageInfo } from "../commands/crop-commands.js";
 import type {
+  CropResult,
   CropSettings,
   FileEntry,
-  CropResult,
   ProcessingStatus,
 } from "../types/index.js";
-import {
-  cropImages,
-  getImageInfo,
-  getPreviewData,
-} from "../commands/crop-commands.js";
 
 /** ファイルリスト */
 export const files = writable<FileEntry[]>([]);
@@ -34,16 +31,26 @@ export const progress = writable<number>(0);
 /** クロップ結果 */
 export const results = writable<CropResult[]>([]);
 
-/** プレビュー画像データURL */
-export const previewData = writable<string>("");
+/** 元画像の Object URL */
+export const originalImageUrl = writable<string>("");
 
 /** エラーメッセージ */
 export const errorMessage = writable<string>("");
 
 /** 選択中のファイルエントリ */
-export const selectedFile = derived(
-  [files, selectedIndex],
-  ([$files, $idx]) => ($idx >= 0 && $idx < $files.length ? $files[$idx] : null),
+export const selectedFile = derived([files, selectedIndex], ([$files, $idx]) =>
+  $idx >= 0 && $idx < $files.length ? $files[$idx] : null,
+);
+
+/** クロップ後の画像サイズ */
+export const croppedSize = derived(
+  [selectedFile, cropSettings],
+  ([$file, $settings]): { width: number; height: number } | null => {
+    if (!$file?.info) return null;
+    const width = $file.info.width - $settings.left - $settings.right;
+    const height = $file.info.height - $settings.top - $settings.bottom;
+    return { width: Math.max(0, width), height: Math.max(0, height) };
+  },
 );
 
 /** ファイルを追加し、画像情報を取得する */
@@ -80,9 +87,11 @@ export function removeFile(index: number): void {
 
 /** 全ファイルを削除する */
 export function clearFiles(): void {
+  const prev = get(originalImageUrl);
+  if (prev) URL.revokeObjectURL(prev);
   files.set([]);
   selectedIndex.set(-1);
-  previewData.set("");
+  originalImageUrl.set("");
 }
 
 /** ファイルを選択する */
@@ -90,29 +99,22 @@ export function selectFile(index: number): void {
   selectedIndex.set(index);
 }
 
-let previewTimer: ReturnType<typeof setTimeout> | null = null;
+/** 選択中ファイルの Object URL を更新する */
+export async function updateOriginalImageUrl(): Promise<void> {
+  const prev = get(originalImageUrl);
+  if (prev) URL.revokeObjectURL(prev);
 
-/** プレビューを更新する（300msデバウンス） */
-export function requestPreview(): void {
-  if (previewTimer) clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => {
-    void doUpdatePreview();
-  }, 300);
-}
-
-/** プレビューを即座に更新する */
-async function doUpdatePreview(): Promise<void> {
   const file = get(selectedFile);
   if (!file) {
-    previewData.set("");
+    originalImageUrl.set("");
     return;
   }
   try {
-    const data = await getPreviewData(file.path, get(cropSettings));
-    previewData.set(data);
-  } catch (e) {
-    previewData.set("");
-    errorMessage.set(String(e));
+    const bytes = await readFile(file.path);
+    const blob = new Blob([bytes]);
+    originalImageUrl.set(URL.createObjectURL(blob));
+  } catch {
+    originalImageUrl.set("");
   }
 }
 
