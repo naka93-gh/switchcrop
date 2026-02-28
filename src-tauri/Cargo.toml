@@ -1,14 +1,14 @@
 [package]
-name = "cropper"
+name = "switchcrop"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "cropper_lib"
+name = "switchcrop_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [[bin]]
-name = "cropper"
+name = "switchcrop"
 path = "src/main.rs"
 
 [dependencies]

@@ -51,7 +51,6 @@
 
 <div class="app">
   <header>
-    <h1>Cropper</h1>
     <nav class="tabs">
       <button
         class="tab"
