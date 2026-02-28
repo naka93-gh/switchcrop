@@ -1,16 +1,45 @@
 <script lang="ts">
+  import { getCurrentWebview } from "@tauri-apps/api/webview";
   import CropPanel from "./lib/components/CropPanel.svelte";
   import FileList from "./lib/components/FileList.svelte";
   import PreviewPanel from "./lib/components/PreviewPanel.svelte";
   import ProgressBar from "./lib/components/ProgressBar.svelte";
-  import { selectedIndex, updateOriginalImageUrl } from "./lib/stores/crop-store.js";
+  import { addFiles, selectedIndex, updateOriginalImageUrl } from "./lib/stores/crop-store.js";
+
+  const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "bmp", "gif", "tiff", "tif"]);
 
   type Tab = "files" | "crop";
   let activeTab: Tab = $state("files");
+  let isDragging = $state(false);
+
+  function filterImagePaths(paths: string[]): string[] {
+    return paths.filter((p) => {
+      const ext = p.split(".").pop()?.toLowerCase() ?? "";
+      return IMAGE_EXTENSIONS.has(ext);
+    });
+  }
 
   $effect(() => {
     void $selectedIndex;
     updateOriginalImageUrl();
+  });
+
+  $effect(() => {
+    const unlisten = getCurrentWebview().onDragDropEvent((event) => {
+      if (event.payload.type === "enter") {
+        isDragging = true;
+      } else if (event.payload.type === "drop") {
+        isDragging = false;
+        const imagePaths = filterImagePaths(event.payload.paths);
+        if (imagePaths.length > 0) {
+          activeTab = "files";
+          addFiles(imagePaths);
+        }
+      } else if (event.payload.type === "leave") {
+        isDragging = false;
+      }
+    });
+    return () => { unlisten.then((fn) => fn()); };
   });
 </script>
 
@@ -34,6 +63,12 @@
       </button>
     </nav>
   </header>
+
+  {#if isDragging}
+    <div class="drop-overlay">
+      <div class="drop-message">ここにドロップして追加</div>
+    </div>
+  {/if}
 
   {#if activeTab === "files"}
     <div class="tab-content files-tab">
@@ -130,5 +165,26 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .drop-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 122, 255, 0.08);
+    border: 3px dashed var(--color-accent);
+    pointer-events: none;
+  }
+
+  .drop-message {
+    padding: 12px 24px;
+    border-radius: 10px;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
   }
 </style>
