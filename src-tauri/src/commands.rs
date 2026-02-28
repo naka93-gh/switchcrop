@@ -3,32 +3,42 @@ use std::path::{Path, PathBuf};
 
 /// 複数画像を一括クロップする
 #[tauri::command]
-pub fn crop_images(
+pub async fn crop_images(
     paths: Vec<String>,
     settings: CropSettings,
     output_dir: Option<String>,
-) -> Vec<CropResult> {
-    paths
-        .iter()
-        .map(|path| crop_single(path, &settings, output_dir.as_deref()))
-        .collect()
+) -> Result<Vec<CropResult>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        paths
+            .iter()
+            .map(|path| crop_single(path, &settings, output_dir.as_deref()))
+            .collect()
+    })
+    .await
+    .map_err(|e| format!("タスク実行エラー: {e}"))
 }
 
 /// 画像のサイズ・フォーマット情報を取得する
 #[tauri::command]
-pub fn get_image_info(path: String) -> Result<ImageInfo, String> {
-    processor::get_info(&path)
+pub async fn get_image_info(path: String) -> Result<ImageInfo, String> {
+    tauri::async_runtime::spawn_blocking(move || processor::get_info(&path))
+        .await
+        .map_err(|e| format!("タスク実行エラー: {e}"))?
 }
 
 /// プレビュー用Base64画像データを生成する
 #[tauri::command]
-pub fn get_preview_data(
+pub async fn get_preview_data(
     path: String,
     settings: CropSettings,
     max_size: Option<u32>,
 ) -> Result<String, String> {
-    let max = max_size.unwrap_or(600);
-    processor::generate_preview(&path, &settings, max)
+    tauri::async_runtime::spawn_blocking(move || {
+        let max = max_size.unwrap_or(600);
+        processor::generate_preview(&path, &settings, max)
+    })
+    .await
+    .map_err(|e| format!("タスク実行エラー: {e}"))?
 }
 
 /// 単一画像をクロップして結果を返す

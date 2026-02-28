@@ -54,10 +54,10 @@ pub fn crop_image(
     Ok(())
 }
 
-/// 画像のサイズとフォーマット情報を取得する
+/// 画像のサイズとフォーマット情報を取得する（ヘッダのみ読み込み）
 pub fn get_info(path: &str) -> Result<ImageInfo, String> {
-    let img = image::open(path).map_err(|e| format!("画像の読み込みに失敗: {e}"))?;
-    let (width, height) = img.dimensions();
+    let (width, height) =
+        image::image_dimensions(path).map_err(|e| format!("画像の読み込みに失敗: {e}"))?;
     let format = detect_format(path)
         .map(format_to_string)
         .unwrap_or_else(|_| "unknown".to_string());
@@ -156,12 +156,12 @@ fn resize_for_preview(img: DynamicImage, max_size: u32) -> DynamicImage {
     let ratio = (max_size as f64 / w as f64).min(max_size as f64 / h as f64);
     let new_w = (w as f64 * ratio) as u32;
     let new_h = (h as f64 * ratio) as u32;
-    DynamicImage::from(image::imageops::resize(
-        &img,
-        new_w,
-        new_h,
-        image::imageops::FilterType::Lanczos3,
-    ))
+    let filter = if max_size <= 200 {
+        image::imageops::FilterType::Triangle
+    } else {
+        image::imageops::FilterType::Lanczos3
+    };
+    DynamicImage::from(image::imageops::resize(&img, new_w, new_h, filter))
 }
 
 #[cfg(test)]
@@ -170,9 +170,7 @@ mod tests {
     use image::{ImageBuffer, Rgba};
 
     fn create_test_image(path: &str, width: u32, height: u32) {
-        let img = ImageBuffer::from_fn(width, height, |x, y| {
-            Rgba([x as u8, y as u8, 128, 255])
-        });
+        let img = ImageBuffer::from_fn(width, height, |x, y| Rgba([x as u8, y as u8, 128, 255]));
         img.save(path).unwrap();
     }
 
